@@ -2,7 +2,7 @@
 
 # So you want to learn assembly?
 
-The luck possessed by thee is unparalleled, for thou art did grant the blessing bestoweth upon this enchiridion's grandeur. This definite guide will answer all your questions about this ancient and mysterious programming language. The dialect used will be x86-64 GAS syntax/AT&T for the GCC compiler, but you can apply these concepts to most Assembly dialects. Basic knowledge of the C programming language will help grasp concepts quicker.
+The luck possessed by thee is unparalleled, for thou art did grant the blessing bestoweth upon this enchiridion's grandeur. This definite guide will answer all your questions about this ancient and mysterious programming language. The dialect used will be x86-64 GAS syntax/AT&T for the GCC compiler, but you can apply these concepts to most Assembly dialects. Prerequisites include basic knowledge of the [C programming language](https://www.youtube.com/watch?v=tas0O586t80) and/or full completion of the hit game [Human Resource Machine](https://www.youtube.com/watch?v=dQw4w9WgXcQ) will help grasp concepts quicker.
 
 
 # File Compilation
@@ -100,14 +100,91 @@ call puts
 
 
 
+
+
+
+
+
+
 # Syntax
 
 - Section [.data || .text]
-- Literal [$5 || $'\n' || $bruh || $3+5]
+- Literal [$5 || $'\n' || $bruh || $3+5 || $0b1010 || $0xdeadbeef || $0777]
 - Register [%rax || %esi || %bh || %cl]
 - Memory [(%rsp) || 8(%rsp,%rcx) || -16(%rsp, %rcx, 8)]
 - Label [lab: || yourmom: || bruh:]
 - Instruction [mov $5, %rax]
+
+
+
+
+
+# Sections
+.globl main
+- allows for the file to call your code
+```gas
+# gcc
+.globl main
+.text
+main:
+
+# as
+.globl _start:
+.text
+_start:
+```
+
+.data
+- define constants
+
+.text
+- rest of your code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Literals
+- literals are prefixed with a $ symbol
+```gas
+# number 32 
+$32
+
+# single quote char
+$'\''
+
+# expression (6 / 9) + 5 (int division)
+$(6/9)+5
+$ ( 6 / 9 ) + 5
+
+# value of the constant "bruh" address
+.data
+bruh: .ascii "bruh\0
+.text
+$bruh
+
+# binary
+$0b1010101
+
+# octal
+$0777
+
+# hexadecimal
+$0xabc
+```
+
+
+
+
 
 
 
@@ -118,7 +195,7 @@ call puts
 
 
 # Registers
-
+- registers are prefixed with a % symbol
 - all non-xmm registers have a 64, 32, 16, 8 bit sections (same register, different chunks)
 - only rax, rbx, rcx, rdx have a 16-8 bit higher (h) byte section
 [![register and subregister image](https://i.postimg.cc/PxNWm9Wg/image-1.jpg)](https://postimg.cc/vgFxyPSh)
@@ -152,8 +229,12 @@ call puts
 - 6th argument in function call / syscall
 
 #### %xmm0
+- SIMD float register
+- 1st argument when calling function (if float)
+- return value from function (if float)
 
 #### %xmm1, %xmm2 .. %xmm15
+- more SIMD float registers
 
 ## Preserved Registers (bad things may happen if you don't save original value for reassign)
 
@@ -202,7 +283,7 @@ There exists a prison containing an infinite amount of prison cells. There are r
 - storing and indexing arrays
 - usually you want an offset of %rbp or %rsp
 
-```python
+```gas
 # *rbp (assumes 8 bytes since %rbp is 8 byte register)
 (%rbp)
 
@@ -241,11 +322,11 @@ movb $0, 2(%rsp)
 - the most fundamental instruction is assignment
 - move A into B
 - when working with memory specify the suffix
-```python
+```gas
 # 1 -> rax (rax = 1)
 mov $1, %rax
 ```
-```python
+```gas
 # rbp -> rdi
 mov %rbp, %rdi
 ```
@@ -253,40 +334,54 @@ mov %rbp, %rdi
 ### lea
 - register reference assignment
 - useful for scanf int / char
-```python
+```gas
 # &var_6969 -> rcx (rcx = &var_6969)
 lea -6969(%rbp), %rcx
 ```
  
 ### add
 - add A to B
-```python
+```gas
 # rax + 1 -> rax (rax += 1)
 add $1, %rax
 ```
-```python
+```gas
 # rax + rcx -> rax (rax += rcx)
 add %rcx, %rax
 ```
  
 ### sub
+
 ### neg
 - regular negation
 - flips all bits and adds 1
+
 ### xor
 - bitwise xor (^)
+
 ### and
 - bitwise and (&)
+
 ### not
 - bitwise negation (~)
 - flips all bits
-### shl
+
+### shl / sal
+- bitwise left shift (<<)
+
+### sar
+- bitwise right shift (>>)
+- maintain signed bit
+
 ### shr
+- bitwise right shift
+- also shift the signed bit
+
  
 ### idiv
 - unsigned division of rax
 - ensure %rdx = 0
-```python
+```gas
 mov $0, %rdx
 # rax / rcx -> rax (rax /= rcx)
 # rax % rcx -> rdx (rdx = rax % rcx)
@@ -295,7 +390,7 @@ idiv %rcx
  
 ### imul
 - unsigned multiplication of rax
-```python
+```gas
 # rax * rcx -> rax (rax *= rcx)
 imul %rcx
 ```
@@ -303,9 +398,10 @@ imul %rcx
 ### xchg
 - exchange the source and destination (a, b) = (b, a)
 ### cmp
+### jmp / j + suffix
+### cmov + suffix
 
 ### loop
-
 
 
 
@@ -344,7 +440,7 @@ if (rax < 10) {
 ```
  
 #### ASM translation
-```python
+```gas
 cmp $10, %rax
  
 # jump to true label if 10 > rax (rax < 10)
@@ -392,7 +488,7 @@ do {
 ```
  
 #### ASM translation
-```python
+```gas
 mov $1, %rax
 mov $7, %rbx
 mov $5, %rcx
@@ -429,7 +525,7 @@ rax = sqrt(rax);
 ```
  
 #### ASM translation
-```python
+```gas
 mov $123, %rax
 # convert single integer to single double
 cvtsi2sd %rax, %xmm0
@@ -447,7 +543,7 @@ int rax = 123;
 double rax = sqrt(rax);
 ```
 #### ASM translation
-```python
+```gas
 mov $123, %rax
 cvtsi2sd %rax, %xmm0
 sqrtsd %xmm0, %xmm1
@@ -465,7 +561,7 @@ double rax_f = sqrt(rax);
 printf("%f", rax_f);
 ```
 #### ASM translation
-```python
+```gas
 mov $123, %rax
 cvtsi2sd %rax, %xmm0
 sqrtsd %xmm0, %xmm1
@@ -501,7 +597,7 @@ call printf
 
 # GCC Function Calling
 
-```python
+```gas
 # getchar() -> rax
 call getchar
 ```
@@ -519,7 +615,7 @@ printf(rbp, var_6969);
 ```
  
 #### ASM translation
-```python
+```gas
 # rbp = "%d\0"
 # *(rbp + 0) = '%'
 mov $'%', (%rbp)
@@ -593,7 +689,7 @@ syscall(rax, rdi, rsi, len);
 ```
  
 #### ASM translation
-```python
+```gas
 mov $500, %rax
  
 print_num:
@@ -617,4 +713,60 @@ print_digit:
   mov %rsp, %rdx
   sub %rsi, %rdx
   syscall
+```
+
+# User Created Functions & Recursion
+#### C code
+```gas
+int f(int n) {
+  if (n < 5) {return f(n + 1);}
+  return n;
+}
+
+int main() {
+  printf("%d", f(1));
+}
+```
+
+#### ASM translation
+```gas
+.globl main
+.data
+bruh: .string "%d"
+.text
+main:
+  push %rbp
+  mov %rsp, %rbp
+  mov $1, %rcx
+  mov %rcx, %rdi
+  call f
+
+  mov $bruh, %rdi
+  mov %rax, %rsi
+  mov $0, %rax
+  call printf
+
+  mov %rbp, %rsp
+  pop %rbp
+
+f:
+  push %rbp
+  mov %rsp, %rbp
+
+  # will "push" the recursed n value each time by moving the stack pointer up
+  sub $8, %rsp
+  mov %rdi, -8(%rbp)
+  cmpq $4, -8(%rbp)
+  jg else_ret
+  mov -8(%rbp), %eax
+  inc %rax
+  mov %rax, %rdi
+  call f
+  jmp if_ret
+else_ret:
+  mov -8(%rbp), %rax
+if_ret:
+  # allows for the function to backtrack (no idea how it work)
+  leave
+  ret
 ```
